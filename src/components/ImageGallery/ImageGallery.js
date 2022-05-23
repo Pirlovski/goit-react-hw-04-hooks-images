@@ -3,6 +3,7 @@ import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 import s from './ImageGallery.module.css';
 import propTypes from 'prop-types';
 import React from 'react';
+import shortid from 'shortid';
 
 const ImageGallery = ({ images, open }) => {
   return (
@@ -10,7 +11,11 @@ const ImageGallery = ({ images, open }) => {
       <ul className={s.gallery__list}>
         {images.map(({ webformatURL, tags, id }) => {
           return (
-            <li key={id} className={s.gallery__item} onClick={open}>
+            <li
+              key={shortid.generate()}
+              className={s.gallery__item}
+              onClick={open}
+            >
               <ImageGalleryItem
                 userImageURL={webformatURL}
                 tags={tags}

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useEffect, useState } from "react";
 import Searchbar from "./Searchbar/Searchbar";
 import ImageGallery from "./ImageGallery/ImageGallery";
 import getPictures from "./fetchPicture/fetchPicture";
@@ -9,117 +9,118 @@ import { Rings } from "react-loader-spinner";
 import Header from "./Header";
 import Main from "./Main";
 
+export default function App(){
 
- class App extends Component {
-   state = {
-      images : [] ,
-      request : '' , 
-      status : 'idle',
-      loadMore: false , 
-      page : 1 , 
-      showModal: false,
-      error: "",
-      modalImage : ''
-   }
+const [images , setImages ] = useState([]) ; 
+const [request , setRequest ] = useState('') ; 
+const [status , setStatus ] = useState('idle') ; 
+const [loadMore , setLoadMore ] = useState(false) ; 
+const [page , setPage ] = useState(1) ; 
+const [showModal , setShowModal ] = useState(false) ; 
+const [error , setError ] = useState('') ; 
+const [modalImage , setModalImage ] = useState('') ; 
 
-   hendleFormSubmit =  request  => {
+// const hendleFormSubmit =  request  => {
+// setRequest(request) ; 
+// setPage(1) ;
 
-this.setState({ request : request , page: 1 })
+  
+//      }
 
-   }
+useEffect(() => {
+if(request !== '') {
+  let value = getPictures(request , page); 
+  setStatus("pending");
+  value.then((res) => {
+const images = res.data ; 
+if(images.total === 0 ) {
+  setLoadMore(false) ; 
+  alert.error("Could not find images with that name");
+ 
+}
 
+setImages((prev) => [...prev , ...images.hits]);
+setStatus('resolved') ; 
+setLoadMore(true) ; 
 
-   componentDidUpdate(prevProps, prevState) {
-    if (prevState.request !== this.state.request) {
-      this.setState({ status: "pending" });
-      let value = getPictures(this.state.request);
-      value
-        .then((res) => {
-          const images = res.data;
-          if (res.data.total === 0) {
-            this.setState({ loadMore: false });
-            alert.error("Could not find images with that name");
-          }
-          this.setState((prevState) => ({
-            images: images.hits,
-            page: prevState.page + 1,
-            status: "resolved",
-            loadMore: true,
-          }));
-          if (res.data.hits.length < 12) {
-            this.setState({ loadMore: false });
-          }
-        })
-        .catch((error) => this.setState({ status: "rejected", error }));
-    }
-  }
-  loadMore = () => {
-    const { page, request } = this.state;
-    let value = getPictures(request, page);
-    value.then((res) => {
-      const images = res.data;
-      this.setState((prevState) => ({
-        images: [...prevState.images, ...images.hits],
-        page: prevState.page + 1,
-        loadMore: true,
-      }));
-      if (res.data.hits.length < 12) {
-        this.setState({ loadMore: false });
-      }
-    });
-  };
-  toglleModal = (e) => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
-    if (!this.state.showModal) {
-      if (e) {
-        this.filtredLIst(e.target.parentNode.id);
-      }
-    }
-  };
-  filtredLIst = (id) => {
-    const { images } = this.state;
-    let value = images.find((item) => item.id === Number(id));
-    this.setState({ modalImage: value.largeImageURL });
-  };
-  findPicture = (pictureName) => {
-    if (pictureName !== this.state.request) {
-      this.setState({ request: pictureName, page: 1 });
-    }
-  };
-  render() {
-    const { images, status, modalImage, showModal, loadMore } = this.state;
-    return (
-      <div className="App">
-        <Header>
-          <Container>
-            <Searchbar onSubmit={this.findPicture} />
-          </Container>
-            {status === "pending" && (
-              <Rings
-                height="1000"
-                width="1000"
-                color="red"
-                ariaLabel="loading"
-              />
-            )}
-        </Header>
-        <Main>
-          <Container>
-            {status === "idle" && <p>please enter name picture</p>}
-           
-            {status === "resolved" && (
-              <ImageGallery images={images} open={this.toglleModal} />
-            )}
-            {loadMore && <Button loag={this.loadMore} />}
-            {showModal && <Modal src={modalImage} onClose={this.toglleModal} />}
-          </Container>
-        </Main>
-      
-      </div>
-    );
+if(res.data.hits.length < 12 ) {
+  setLoadMore( false)
+}
+
+  }).catch((error) => {
+    setStatus('rejected') ; 
+   console.log(error);
+  })
+}
+ }, [request , page])
+
+ const onloadMore = () => {
+  setPage((prev) => prev + 1);
+};
+
+const toglleModal = (e) => {
+  setShowModal((prev) => !prev);
+if(!showModal) {
+  if(e){
+  
+    filtredLIst(e.target.parentNode.id)
   }
 }
-export default App ;
+
+
+
+
+
+}
+const  filtredLIst = (id) => {
+  
+  let value = images.find((item) => item.id === Number(id));
+  setModalImage(value.largeImageURL) ;
+
+};
+
+ const findPicture = (pictureName) => {
+   setRequest(pictureName) ; 
+   setPage(1) ; 
+   setImages([]) ; 
+
+};
+
+return (
+  <div className="App">
+    <Header>
+      <Container>
+        <Searchbar onSubmit={findPicture} />
+      </Container>
+        {status === "pending" && (
+          <Rings
+            height="1000"
+            width="1000"
+            color="red"
+            ariaLabel="loading"
+          />
+        )}
+    </Header>
+    <Main>
+      <Container>
+        {status === "idle" && <p>please enter name picture</p>}
+       
+        {status === "resolved" && (
+          <ImageGallery images={images} open={toglleModal} />
+        )}
+        {loadMore && <Button loag={onloadMore} />}
+        {showModal && <Modal src={modalImage} onClose={toglleModal} />}
+      </Container>
+    </Main>
+  
+  </div>
+);
+
+   
+ 
+
+}
+
 
 
 
