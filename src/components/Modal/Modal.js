@@ -1,37 +1,33 @@
-import React, { Component } from 'react';
+import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import PropTypes from 'prop-types';
 import s from './Modal.module.css';
 const modalRoot = document.querySelector('#modal-root');
-export default class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.onKeydovnCloseModal);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.onKeydovnCloseModal);
-  }
-  onKeydovnCloseModal = e => {
+export default function Modal({ onClose, src }) {
+  useEffect(() => {
+    window.addEventListener('keydown', onKeydovnCloseModal);
+    return () => window.removeEventListener('keydown', onKeydovnCloseModal);
+  });
+
+  const onKeydovnCloseModal = e => {
     if (e.code === 'Escape') {
-      this.props.onClose();
+      onClose();
     }
   };
-  onBackdropClickCloseModal = e => {
+  const onBackdropClickCloseModal = e => {
     if (e.target === e.currentTarget) {
-      this.props.onClose();
+      onClose();
     }
   };
-  render() {
-    return createPortal(
-      <div
-        className={s.Modal__backdrop}
-        onClick={this.onBackdropClickCloseModal}
-      >
-        <img
-          className={s.Modal__content}
-          src={this.props.src}
-          alt="asfdsfdsf"
-        />
-      </div>,
-      modalRoot
-    );
-  }
+
+  return createPortal(
+    <div className={s.Modal__backdrop} onClick={onBackdropClickCloseModal}>
+      <img className={s.Modal__content} src={src} alt="asfdsfdsf" />
+    </div>,
+    modalRoot
+  );
 }
+Modal.propTypes = {
+  src: PropTypes.string,
+  onClose: PropTypes.func,
+};
